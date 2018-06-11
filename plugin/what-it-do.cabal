@@ -1,0 +1,17 @@
+name: what-it-do
+cabal-version: >= 1.24
+build-type: Simple
+version: 1.0.0
+
+
+library
+  default-language: Haskell2010
+  build-depends: base
+               , ghc
+               , syb
+               , containers
+               , template-haskell
+               , prettyprinter
+  exposed-modules: WhatItDo
+  other-modules: Constraint
+  ghc-options: -Wall
