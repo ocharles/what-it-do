@@ -2,9 +2,6 @@
 
 module WhatItDo ( plugin, traceDo ) where
 
--- assert-explainer
-import qualified Constraint
-
 -- base
 import Data.Traversable ( for )
 import Control.Monad.IO.Class ( liftIO )
@@ -38,6 +35,10 @@ import Data.Generics ( everywhereM, mkM )
 -- template-haskell
 import Language.Haskell.TH as TH
 
+-- what-it-do
+import qualified Constraint
+
+
 
 plugin :: GHC.Plugin
 plugin =
@@ -47,7 +48,7 @@ plugin =
 
 
 pluginImpl :: GHC.ModSummary -> GHC.TcGblEnv -> GHC.TcM GHC.TcGblEnv
-pluginImpl _modSummary tcGblEnv = do 
+pluginImpl _modSummary tcGblEnv = do
   hscEnv <-
     GHC.getTopEnv
 
@@ -89,13 +90,13 @@ whatItDo traceDoName ( GHC.L _ ( Expr.HsApp _ ( GHC.L _ ( Expr.HsWrap _ _ ( Expr
               case stmt of
                 Expr.BindStmt bt pat expr e1 e2 -> do
                   traceBind loc bt pat expr e1 e2
-  
+
                 _ ->
                   return orig
           )
-  
+
       return ( Expr.HsDo t Expr.DoExpr ( GHC.noLoc stmts' ) )
-  
+
     go ( Expr.HsPar a ( GHC.L b c ) ) =
       Expr.HsPar a <$> ( GHC.L b <$> go c )
 
@@ -120,7 +121,7 @@ traceBind
   -> GHC.TcM ( Expr.LStmt GHC.GhcTc ( Expr.LHsExpr GHC.GhcTc ) )
 traceBind loc t pat expr e1 e2 = do
   Just exprT <-
-    typeOfExpr expr 
+    typeOfExpr expr
 
   let
     ( _m, a ) =
@@ -143,7 +144,7 @@ traceBind loc t pat expr e1 e2 = do
             GHC.unsafeGlobalDynFlags
             ( GHC.ppr pat )
             ( GHC.defaultUserStyle GHC.unsafeGlobalDynFlags )
-      
+
       Right traceExprPs <-
         fmap ( GHC.convertToHsExpr GHC.noSrcSpan )
           $ liftIO
@@ -162,7 +163,7 @@ traceBind loc t pat expr e1 e2 = do
             |]
 
       ( traceExprRn, _ ) <-
-        GHC.rnLExpr traceExprPs 
+        GHC.rnLExpr traceExprPs
 
       ( traceExprTc, wanteds ) <-
         GHC.captureConstraints
@@ -187,7 +188,7 @@ traceBind loc t pat expr e1 e2 = do
       -- diagnostic function with the necessary arguments.
       newBody <-
         GHC.zonkTopLExpr
-          ( GHC.mkHsApp 
+          ( GHC.mkHsApp
               ( GHC.mkLHsWrap wrapper traceExprTc )
               expr
           )
@@ -206,7 +207,7 @@ typeOfExpr e = do
     liftIO ( GHC.deSugarExpr hs_env e )
 
   return ( CoreUtils.exprType <$> mbe )
-  
+
 
 
 -- | Given a typed expression, ensure that it has a Show instance.
